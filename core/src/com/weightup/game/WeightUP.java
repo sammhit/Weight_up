@@ -2,11 +2,14 @@ package com.weightup.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
@@ -18,6 +21,8 @@ import java.util.logging.Handler;
 
 public class WeightUP extends ApplicationAdapter {
 	SpriteBatch batch;
+	Preferences  preferences;
+	int highScoreValue;
 
 	float screenWidth;
 	float screenHeight;
@@ -62,15 +67,32 @@ public class WeightUP extends ApplicationAdapter {
 	Texture startScreenMessage;
 
 	BitmapFont bitmapFont;
+	BitmapFont bitmapFontHighScore;
+	BitmapFont bitmapFontScore;
+	FreeTypeFontGenerator freeTypeFontGenerator;
+	FreeTypeFontGenerator.FreeTypeFontParameter parameter;
+    FreeTypeFontGenerator.FreeTypeFontParameter parameterScore;
+    FreeTypeFontGenerator.FreeTypeFontParameter parameterHighScore;
+
+
+
+
 	long startTime=0;
+
+	Sound babyFall;
+	Sound babyLaugh;
+	Sound jump;
 //<a href="http://www.transparentpng.com//details/baby-girl-clipart-images_514.html">transparentpng.com</a>
-	
+//Sound effects obtained from https://www.zapsplat.com“
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 
 		screenHeight=Gdx.graphics.getHeight();
 		screenWidth=Gdx.graphics.getWidth();
+
+		preferences	= Gdx.app.getPreferences("HighScore");
+		highScoreValue=preferences.getInteger("HScore",0);
 
 		//shapeRenderer = new ShapeRenderer();
 		airplaneRectangles=new Rectangle[3];
@@ -93,9 +115,26 @@ public class WeightUP extends ApplicationAdapter {
 
 		distanceBetweenClouds = screenHeight/4;
 
-		bitmapFont = new BitmapFont();
-		bitmapFont.setColor(Color.GOLD);
-		bitmapFont.getData().setScale(10);
+        freeTypeFontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("data/abrilfatface.ttf"));
+        parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameterScore = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameterHighScore = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size=120;
+        parameter.color= Color.GOLD;
+        bitmapFont = freeTypeFontGenerator.generateFont(parameter);
+        parameterScore.size =120;
+        parameterHighScore.size=120;
+        parameterScore.color=Color.BROWN;
+        parameterHighScore.color=Color.FOREST;
+        bitmapFontHighScore= freeTypeFontGenerator.generateFont(parameterHighScore);
+        bitmapFontScore= freeTypeFontGenerator.generateFont(parameterScore);
+
+
+
+
+		babyFall = Gdx.audio.newSound(Gdx.files.internal("data/babyfall.mp3"));
+		babyLaugh =  Gdx.audio.newSound(Gdx.files.internal("data/babylaugh.mp3"));
+		jump= Gdx.audio.newSound(Gdx.files.internal("data/jump.mp3"));
 
 
 		balloonY=screenHeight*3/4-balloonOnly.getHeight()/2;
@@ -104,7 +143,7 @@ public class WeightUP extends ApplicationAdapter {
 			airplaneRectangles[i]= new Rectangle();
 			randomPlaneHeight[i] = randomPlaneOffset.nextFloat() * (screenHeight - airplane.getHeight());
 		}
-		planeX=0;
+		planeX=-screenWidth;
 
 		for (int i =0; i<5;i++){
 			cloudY1[i]= screenHeight+i*distanceBetweenClouds;
@@ -126,7 +165,8 @@ public class WeightUP extends ApplicationAdapter {
 			bitmapFont.draw(batch,String.valueOf(score),100,200);
 
 			if (Gdx.input.justTouched()){
-				balloonVelocity-=50;
+				balloonVelocity-=40;
+				 long id = jump.play(1.0f);
 			}
 
 
@@ -141,11 +181,12 @@ public class WeightUP extends ApplicationAdapter {
 				batch.draw(cloud2, screenWidth / 2 + 300, cloudY1[i]);
 			}
 			if (balloonY>balloonWire.getHeight()+weight.getHeight() && balloonY+balloonOnly.getHeight()/2<screenHeight){
-				balloonVelocity+=gravity;
+				balloonVelocity+=(gravity-1);
 				balloonY-=balloonVelocity;
 			}
 			else {
 				gameState=2;
+				babyFall.play(1.0f);
 
 			}
 
@@ -172,7 +213,7 @@ public class WeightUP extends ApplicationAdapter {
 					}
 				}
 
-				planeX = -airplane.getWidth();
+				planeX = -5;
 			}
 
 			planeX = planeX + planeVelocity;
@@ -200,6 +241,7 @@ public class WeightUP extends ApplicationAdapter {
 			if (Gdx.input.justTouched()){
 				startTime = System.currentTimeMillis();
 				gameState=1;
+				babyLaugh.play(1.0f);
 
 			}
 
@@ -212,8 +254,12 @@ public class WeightUP extends ApplicationAdapter {
 
 		}
 		else if(gameState==2){
+
 			balloonupvelocity-=gravity;
 			babyfallvelocity+=(gravity+4);
+			balloonCircle = new Circle();
+			babyRectangle = new Rectangle();
+			airplaneRectangles = new Rectangle[3];
 			//if (balloonY<=balloonWire.getHeight()+weight.getHeight()){
 				float tempY = balloonY;
 				tempY-=balloonupvelocity;
@@ -232,11 +278,16 @@ public class WeightUP extends ApplicationAdapter {
 			//}
 
 			batch.draw(clarafell,screenWidth/2-clarafell.getWidth()/2,screenHeight/2+gameOverScreen.getHeight()/2+clarafell.getHeight()/2+10);
+
 			batch.draw(gameOverScreen,screenWidth/2-gameOverScreen.getWidth()/2,screenHeight/2-gameOverScreen.getHeight()/2);
 			//batch.draw(rateMe,screenWidth/2-rateMe.getWidth()/2,screenHeight/2-gameOverScreen.getHeight()/2-rateMe.getHeight()-screenWidth/4);
-
+			if (score>highScoreValue){
+				preferences.putInteger("HScore",score);
+				highScoreValue=score;
+				preferences.flush();
+			}
 			bitmapFont.draw(batch,String.valueOf(score),100,200);
-
+            bitmapFontHighScore.draw(batch,String.valueOf(highScoreValue),screenWidth/2, 200);
 			if (Gdx.input.justTouched()){
 				startTime=System.currentTimeMillis();
 				gameState=1;
@@ -252,7 +303,7 @@ public class WeightUP extends ApplicationAdapter {
 					airplaneRectangles[i]= new Rectangle();
 					randomPlaneHeight[i] = randomPlaneOffset.nextFloat() * (screenHeight - airplane.getHeight());
 				}
-				planeX=0;
+				planeX=-screenWidth;
 				bitmapFont.draw(batch,String.valueOf(score),100,200);
 
 				for (int i =0; i<5;i++){
@@ -294,13 +345,21 @@ public class WeightUP extends ApplicationAdapter {
 			Gdx.app.log("Collision Occured","Yes");
 			wire intersector
 			Intersector.overlaps(wireRectangle,airplaneRectangles[i])
+			Intersector.overlaps(babyRectangle, airplaneRectangles[i]
 		}*/
 
 		for (int i=0;i<3;i++){
+
 			//shapeRenderer.rect(planeX-(i)*100,randomPlaneHeight[i],airplane.getWidth(),airplane.getHeight());
-			if (Intersector.overlaps(balloonCircle,airplaneRectangles[i]) ||
-					Intersector.overlaps(babyRectangle,airplaneRectangles[i])){
-				gameState=2;
+			Gdx.app.log("Circle",String.valueOf(balloonCircle));
+			Gdx.app.log("babyrect",String.valueOf(babyRectangle));
+			Gdx.app.log("planerect",String.valueOf(airplaneRectangles));
+			if (airplaneRectangles[i]!=null) {
+				if (Intersector.overlaps(balloonCircle, airplaneRectangles[i])) {
+					gameState = 2;
+
+					babyFall.play(1.0f);
+				}
 			}
 		}
 		//shapeRenderer.end();
@@ -312,5 +371,6 @@ public class WeightUP extends ApplicationAdapter {
 	public void dispose() {
 		batch.dispose();
 		backGround.dispose();
+		freeTypeFontGenerator.dispose();
 	}
 }
