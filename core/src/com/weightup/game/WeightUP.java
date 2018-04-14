@@ -14,15 +14,18 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
 
 import java.util.Random;
 
 import java.util.logging.Handler;
 
-public class WeightUP extends ApplicationAdapter {
+public class WeightUP extends ApplicationAdapter  {
 	SpriteBatch batch;
 	Preferences  preferences;
 	int highScoreValue;
+	int adShown=0;
 
 	float screenWidth;
 	float screenHeight;
@@ -68,13 +71,9 @@ public class WeightUP extends ApplicationAdapter {
 
 	BitmapFont bitmapFont;
 	BitmapFont bitmapFontHighScore;
-	BitmapFont bitmapFontScore;
 	FreeTypeFontGenerator freeTypeFontGenerator;
 	FreeTypeFontGenerator.FreeTypeFontParameter parameter;
-    FreeTypeFontGenerator.FreeTypeFontParameter parameterScore;
     FreeTypeFontGenerator.FreeTypeFontParameter parameterHighScore;
-
-
 
 
 	long startTime=0;
@@ -82,6 +81,11 @@ public class WeightUP extends ApplicationAdapter {
 	Sound babyFall;
 	Sound babyLaugh;
 	Sound jump;
+    public AdService adService;
+    public WeightUP(AdService ads){
+        adService=ads;
+    }
+
 //<a href="http://www.transparentpng.com//details/baby-girl-clipart-images_514.html">transparentpng.com</a>
 //Sound effects obtained from https://www.zapsplat.com“
 	@Override
@@ -117,17 +121,17 @@ public class WeightUP extends ApplicationAdapter {
 
         freeTypeFontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("data/abrilfatface.ttf"));
         parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameterScore = new FreeTypeFontGenerator.FreeTypeFontParameter();
+
         parameterHighScore = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size=120;
         parameter.color= Color.GOLD;
         bitmapFont = freeTypeFontGenerator.generateFont(parameter);
-        parameterScore.size =120;
-        parameterHighScore.size=120;
-        parameterScore.color=Color.BROWN;
+
+        parameterHighScore.size=140;
+
         parameterHighScore.color=Color.FOREST;
         bitmapFontHighScore= freeTypeFontGenerator.generateFont(parameterHighScore);
-        bitmapFontScore= freeTypeFontGenerator.generateFont(parameterScore);
+
 
 
 
@@ -254,6 +258,10 @@ public class WeightUP extends ApplicationAdapter {
 
 		}
 		else if(gameState==2){
+		    if (adShown==0) {
+                adService.showInterstitial();
+                adShown = 1;
+            }
 
 			balloonupvelocity-=gravity;
 			babyfallvelocity+=(gravity+4);
@@ -296,7 +304,7 @@ public class WeightUP extends ApplicationAdapter {
 				planeVelocity=4;
 				balloonupvelocity=0;
 				babyfallvelocity=0;
-
+                adShown=0;
 				balloonY=screenHeight*3/4-balloonOnly.getHeight()/2;
 
 				for (int i =0;i<3;i++) {
@@ -312,6 +320,7 @@ public class WeightUP extends ApplicationAdapter {
 
 
 				}
+
 
 			}
 
@@ -351,9 +360,7 @@ public class WeightUP extends ApplicationAdapter {
 		for (int i=0;i<3;i++){
 
 			//shapeRenderer.rect(planeX-(i)*100,randomPlaneHeight[i],airplane.getWidth(),airplane.getHeight());
-			Gdx.app.log("Circle",String.valueOf(balloonCircle));
-			Gdx.app.log("babyrect",String.valueOf(babyRectangle));
-			Gdx.app.log("planerect",String.valueOf(airplaneRectangles));
+
 			if (airplaneRectangles[i]!=null) {
 				if (Intersector.overlaps(balloonCircle, airplaneRectangles[i])) {
 					gameState = 2;
