@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">weight up</string>
-    <string name="app_id">ca-app-pub-4413278369673308~7201910513</string>
+    <string name="app_name">Keep It Up</string>
+    <string name="ad_app_id">ca-app-pub-4413278369673308~7201910513</string>
+    <string name="play_app_id">1035888343819</string>
     <string name="ad_unit_id">ca-app-pub-4413278369673308/9600310314</string>
     <string name="testad">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="leaderboard_highest">Highest Score</string>
 
 </resources>

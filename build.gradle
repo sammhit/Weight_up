@@ -4,7 +4,7 @@ buildscript {
     repositories {
         mavenLocal()
         mavenCentral()
-        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+
         jcenter()
         google()
     }
@@ -19,7 +19,7 @@ allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
 
-    version = '1.0'
+    version = '2.0'
     ext {
         appName = "weight up"
         gdxVersion = '1.9.8'
@@ -48,6 +48,8 @@ project(":android") {
 
     dependencies {
         compile project(":core")
+
+
         compile 'com.google.android.gms:play-services-ads:12.0.1'
         compile "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
         natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi"
@@ -76,6 +78,7 @@ project(":core") {
 
 
     dependencies {
+
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile 'com.google.android.gms:play-services-ads:12.0.1'
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
